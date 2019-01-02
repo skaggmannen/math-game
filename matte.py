@@ -3,15 +3,32 @@ import random
 
 TOTAL_TIME = 5 * 60
 
+class Level:
+    def __init__(self, min, max):
+        self.min = min
+        self.max = max
+
+    def __repr__(self):
+        return "{} - {}".format(self.min, self.max)
+
+LEVELS = {
+    "1": Level(0, 5),
+    "2": Level(0, 10),
+}
+
 class Game:
+
     def __init__(self):
         self._right = 0
         self._wrong = 0
 
     def run(self):
-        self._start = datetime.datetime.now()
+
+        self._level = self.select_level()
+
         try:
-            while not self.time_up():
+            self._start = datetime.datetime.now()
+            while not self.time_is_up():
                 self.ask_question()
 
             print("Slut på tid!")
@@ -20,15 +37,17 @@ class Game:
             print("Avbrutet efter ", datetime.datetime.now() - self._start)
             
         print("")
-        self.print_stats()
+        print("Rätt:", self._right)
+        print("Fel:", self._wrong)
+        print("Totalt:", self._right + self._wrong)
 
-    def time_up(self):
+    def time_is_up(self):
         time = datetime.datetime.now() - self._start
         return time.total_seconds() > TOTAL_TIME
 
     def ask_question(self):
-        first = random.randint(0, 9)
-        second = random.randint(0, 9) % (10 - first)
+        first = random.randint(self._level.min, self._level.max)
+        second = random.randint(self._level.min, self._level.max - first)
         answer = first + second
 
         guess = input("{} + {} = ".format(first, second))
@@ -43,10 +62,18 @@ class Game:
             print("Det där var inte en siffra...")
             self._wrong += 1
 
-    def print_stats(self):
-        print("Rätt:", self._right)
-        print("Fel:", self._wrong)
-        print("Totalt:", self._right + self._wrong)
+    def select_level(self):
+        print("Nivåer:")
+        for name, level in LEVELS.items(): 
+            print("{}: {}".format(name, level))
+        print("")
+        level = input("Välj nivå: ")
+
+        while level not in LEVELS:
+            print("Den nivån finns inte, välj en annan!")
+            level = input("Välj nivå: ")
+
+        return LEVELS[level]
 
 if __name__ == "__main__":
     game = Game()
