@@ -11,48 +11,37 @@ class Level:
     def __repr__(self):
         return "{} - {}".format(self.min, self.max)
 
-LEVELS = {
-    "1": Level(0, 5),
-    "2": Level(0, 10),
-    "3": Level(0, 20),
-}
-
-class Game:
-
+class BaseGame:
     def __init__(self):
         self._right = 0
         self._wrong = 0
-
-    def run(self):
-
-        self._level = self.select_level()
-        self._numbers = self.generate_numbers()
-        print("Antal unika: ", len(self._numbers))
+    
+    def run(self, level):
+        self._level = level
+        self.numbers = self.generate_numbers()
+        print("Antal unika: ", len(self.numbers))
 
         try:
             self._start = datetime.datetime.now()
-            while not self.time_is_up():
+            while not self.is_done():
                 self.ask_question()
 
-            print("Slut på tid!")
+            print("Slut!")
         except KeyboardInterrupt as e:
             print("")
-            print("Avbrutet efter ", datetime.datetime.now() - self._start)
+            print("Avbrutet!")
             
         print("")
+        print("Tid: ", datetime.datetime.now() - self._start)
         print("Rätt:", self._right)
         print("Fel:", self._wrong)
         print("Totalt:", self._right + self._wrong)
 
-    def time_is_up(self):
-        time = datetime.datetime.now() - self._start
-        return time.total_seconds() > TOTAL_TIME
-
     def ask_question(self):
-        rand = random.randint(0, len(self._numbers) - 1)
+        number = self.select_number()
 
-        first = self._numbers[rand][0]
-        second = self._numbers[rand][1]
+        first = number[0]
+        second = number[1]
         answer = first + second
 
         guess = input("{} + {} = ".format(first, second))
@@ -67,19 +56,6 @@ class Game:
             print("Det där var inte en siffra...")
             self._wrong += 1
 
-    def select_level(self):
-        print("Nivåer:")
-        for name, level in LEVELS.items(): 
-            print("{}: {}".format(name, level))
-        print("")
-        level = input("Välj nivå: ")
-
-        while level not in LEVELS:
-            print("Den nivån finns inte, välj en annan!")
-            level = input("Välj nivå: ")
-
-        return LEVELS[level]
-
     def generate_numbers(self):
         numbers = []
         for i in range(0, self._level.max + 1):
@@ -87,6 +63,78 @@ class Game:
                 numbers.append((i, j))
         return numbers
 
+    def select_number(self):
+        raise NotImplementedError()
+
+    def is_done(self):
+        raise NotImplementedError()
+
+class TimedGame(BaseGame):
+    name = "På Tid"
+
+    def __init__(self):
+        super().__init__()
+
+    def is_done(self):
+        time = datetime.datetime.now() - self._start
+        return time.total_seconds() > TOTAL_TIME
+
+    def select_number(self):
+        rand = random.randint(0, len(self.numbers) - 1)
+        return self.numbers[rand]
+
+class UniqueGame(BaseGame):
+    name = "Alla Tal"
+
+    def __init__(self):
+        super().__init__()
+
+    def is_done(self):
+        return len(self.numbers) == 0
+
+    def select_number(self):
+        rand = random.randint(0, len(self.numbers) - 1)
+        return self.numbers.pop(rand)
+
+GAMES = {
+    "1": TimedGame,
+    "2": UniqueGame,
+}
+
+LEVELS = {
+    "1": Level(0, 5),
+    "2": Level(0, 10),
+    "3": Level(0, 20),
+}
+
+def select_game():
+    print("Spel:")
+    for name, game in GAMES.items(): 
+        print("{}: {}".format(name, game.name))
+    print("")
+    
+    name = input("Välj spel: ")
+
+    while name not in GAMES:
+        print("Det där spelet finns inte!")
+        name = input("Välj spel: ")
+
+    return GAMES[name]()
+
+def select_level():
+    print("Nivåer:")
+    for name, level in LEVELS.items(): 
+        print("{}: {}".format(name, level))
+    print("")
+    name = input("Välj nivå: ")
+
+    while name not in LEVELS:
+        print("Den nivån finns inte, välj en annan!")
+        name = input("Välj nivå: ")
+
+    return LEVELS[name]
+
 if __name__ == "__main__":
-    game = Game()
-    game.run()
+    game = select_game()
+    level = select_level()
+    game.run(level)
