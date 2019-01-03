@@ -1,8 +1,6 @@
 import datetime
 import random
 
-TOTAL_TIME = 5 * 60
-
 class Level:
     def __init__(self, min, max):
         self.min = min
@@ -72,12 +70,14 @@ class BaseGame:
 class TimedGame(BaseGame):
     name = "På Tid"
 
+    TOTAL_TIME = 5 * 60
+
     def __init__(self):
         super().__init__()
 
     def is_done(self):
         time = datetime.datetime.now() - self._start
-        return time.total_seconds() > TOTAL_TIME
+        return time.total_seconds() > self.TOTAL_TIME
 
     def select_number(self):
         rand = random.randint(0, len(self.numbers) - 1)
