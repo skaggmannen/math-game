@@ -14,6 +14,7 @@ class Level:
 LEVELS = {
     "1": Level(0, 5),
     "2": Level(0, 10),
+    "3": Level(0, 20),
 }
 
 class Game:
@@ -25,6 +26,8 @@ class Game:
     def run(self):
 
         self._level = self.select_level()
+        self._numbers = self.generate_numbers()
+        print("Antal unika: ", len(self._numbers))
 
         try:
             self._start = datetime.datetime.now()
@@ -46,8 +49,10 @@ class Game:
         return time.total_seconds() > TOTAL_TIME
 
     def ask_question(self):
-        first = random.randint(self._level.min, self._level.max)
-        second = random.randint(self._level.min, self._level.max - first)
+        rand = random.randint(0, len(self._numbers) - 1)
+
+        first = self._numbers[rand][0]
+        second = self._numbers[rand][1]
         answer = first + second
 
         guess = input("{} + {} = ".format(first, second))
@@ -74,6 +79,13 @@ class Game:
             level = input("Välj nivå: ")
 
         return LEVELS[level]
+
+    def generate_numbers(self):
+        numbers = []
+        for i in range(0, self._level.max + 1):
+            for j in range(self._level.min, self._level.max - self._level.min - i + 1):
+                numbers.append((i, j))
+        return numbers
 
 if __name__ == "__main__":
     game = Game()
